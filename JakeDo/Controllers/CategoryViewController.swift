@@ -14,21 +14,27 @@ class CategoryViewController: UITableViewController {
     
     let realm = try! Realm()
     
-    let categories: Results<Category>? = nil
+    var categories: Results<Category>? = nil
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.rowHeight = 80.0
-        
+        tableView.separatorStyle = .none
         tableView.delegate = self
+        
+        loadCategories()
         
     }
 
     // MARK: - Table view data source
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return categories?.count ?? 1
+        if let categoriesCount = categories?.count {
+            return categoriesCount
+        } else {
+            return 1
+        }
         
     }
     
@@ -38,9 +44,12 @@ class CategoryViewController: UITableViewController {
         
         if let category = categories?[indexPath.row] {
             cell.textLabel?.text = category.name
+            cell.backgroundColor = UIColor(hexString: category.color)
         } else {
-            cell.textLabel?.text = "Add Category"
+            cell.textLabel?.text = "Add category"
         }
+        
+        
         
         return cell
         
@@ -69,7 +78,9 @@ class CategoryViewController: UITableViewController {
             let newCategory = Category()
             newCategory.name = textField.text!
             newCategory.color = UIColor.randomFlat().hexValue()
+            print(newCategory)
             self.saveCategory(category: newCategory)
+            self.loadCategories()
         }
         
         
@@ -86,6 +97,11 @@ class CategoryViewController: UITableViewController {
         } catch {
             print("error saving the new category: \(error)")
         }
+        
+    }
+    
+    func loadCategories() {
+        categories = realm.objects(Category.self)
         tableView.reloadData()
     }
     
