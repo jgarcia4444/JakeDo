@@ -30,11 +30,7 @@ class CategoryViewController: UITableViewController {
     // MARK: - Table view data source
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        if let categoriesCount = categories?.count {
-            return categoriesCount
-        } else {
-            return 1
-        }
+        return categories?.count ?? 1
         
     }
     
@@ -55,10 +51,19 @@ class CategoryViewController: UITableViewController {
         
     }
     
+    
+    //MARK: - TableView Delegate Methods
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! ToDoListViewController
         
-        
-        
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categories?[indexPath.row]
+        }
     }
     
     //MARK: - IBActions
@@ -87,7 +92,9 @@ class CategoryViewController: UITableViewController {
         alert.addAction(action)
         
         present(alert, animated:true)
+        
     }
+    
     
     func saveCategory(category: Category) {
         do {

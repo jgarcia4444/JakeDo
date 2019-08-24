@@ -7,12 +7,106 @@
 //
 
 import UIKit
+import RealmSwift
+import ChameleonFramework
 
 class ToDoListViewController: UITableViewController {
+    
+    var toDoItems: Results<Item>?
+    let realm = try! Realm()
+    
+    
+    var selectedCategory: Category? {
+        didSet {
+           loadItems()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.rowHeight = 80.0
+        tableView.separatorStyle = .none
+        
 
+    }
+    // Mark: - Tableview data source methods
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return toDoItems?.count ?? 1
+    }
+    
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        
+        if let item = toDoItems?[indexPath.row] {
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.isDone ? .checkmark : .none
+        }
+        
+        return cell
+        
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let item = toDoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    item.isDone  = !item.isDone
+                }
+            } catch {
+                print("Error with togglinng the checkmark for the item: \(error)")
+            }
+        }
+        tableView.reloadData()
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    // MARK: - Add Items
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        
+        let alert = UIAlertController(title: "Add Item", message: "", preferredStyle: .alert)
+        
+        var textField = UITextField()
+        
+        alert.addTextField { (itemTextField) in
+            itemTextField.placeholder = "Add New Item"
+            textField = itemTextField
+        }
+        
+        let action = UIAlertAction(title: "Add", style: .default) { (addItem) in
+            
+            let newItem = Item()
+            newItem.title = textField.text!
+            newItem.isDone = false
+            newItem.dateCreated = Date()
+            
+            self.saveItem(item: newItem)
+        }
+        
+        alert.addAction(action)
+        
+        present(alert, animated: true)
+        
+    }
+    
+    
+    // MARK: - Save And Load Items
+    func saveItem(item: Item) {
+        
+        do {
+            try realm.write {
+                selectedCategory?.items.append(item)
+            }
+        } catch {
+            print("Error saving the new item")
+        }
+        tableView.reloadData()
+    }
+    
+    func loadItems() {
+        toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        tableView.reloadData()
     }
     
     
