@@ -10,7 +10,7 @@ import UIKit
 import RealmSwift
 import ChameleonFramework
 
-class ToDoListViewController: UITableViewController {
+class ToDoListViewController: UITableViewController, UISearchBarDelegate {
     
     var toDoItems: Results<Item>?
     let realm = try! Realm()
@@ -21,9 +21,16 @@ class ToDoListViewController: UITableViewController {
            loadItems()
         }
     }
+    
+    @IBOutlet weak var searchBar: UISearchBar!
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.delegate = self
+        tableView.dataSource = self
+        searchBar.delegate = self
         
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
@@ -47,6 +54,8 @@ class ToDoListViewController: UITableViewController {
         return cell
         
     }
+    
+    //MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let item = toDoItems?[indexPath.row] {
@@ -107,6 +116,21 @@ class ToDoListViewController: UITableViewController {
     func loadItems() {
         toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
+    }
+    
+    //MARK: - Search Bar Delgate Methods
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        toDoItems = toDoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        tableView.reloadData()
+        searchBar.resignFirstResponder()
+    }
+    
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText == "" {
+            toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+            tableView.reloadData()
+        }
     }
     
     
