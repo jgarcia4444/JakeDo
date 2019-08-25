@@ -10,7 +10,7 @@ import UIKit
 import RealmSwift
 import ChameleonFramework
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeCellViewController {
     
     let realm = try! Realm()
     
@@ -21,7 +21,6 @@ class CategoryViewController: UITableViewController {
         
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
-        tableView.delegate = self
         
         loadCategories()
         
@@ -36,7 +35,7 @@ class CategoryViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let category = categories?[indexPath.row] {
             cell.textLabel?.text = category.name
@@ -111,6 +110,22 @@ class CategoryViewController: UITableViewController {
         categories = realm.objects(Category.self)
         tableView.reloadData()
     }
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let categoryForDeletion = self.categories?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                }
+            } catch {
+                print("Error deleting the categpry: \(error)")
+            }
+        }
+        
+    }
+    
+    
     
     
 }
